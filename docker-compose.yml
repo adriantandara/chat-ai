@@ -1,0 +1,48 @@
+services:
+  database:
+    image: postgres:15
+    container_name: database
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  server:
+    build: ./src/server
+    container_name: server
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "7788:7788"
+    env_file:
+      - .env
+    depends_on:
+      - database
+    networks:
+      - app_network
+
+  client:
+    build: ./src/client
+    container_name: client
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+    depends_on:
+      - server
+
+volumes:
+  pg_data:
+
+networks:
+  app_network:
+    driver: bridge
